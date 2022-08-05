@@ -25,7 +25,12 @@ def affine_forward(x, w, b):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # n batches
+    n = x.shape[0]
+    x_res = x.reshape(n, (np.prod(x.shape[1:]))) # nxd
+   
+    # peform dot product 
+    out = x_res.dot(w) + b # nxm
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -57,8 +62,14 @@ def affine_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # n batches
+    n = x.shape[0]
+    x_res = x.reshape(n, (np.prod(x.shape[1:]))) # nxd
 
+    dx = dout.dot(w.T).reshape(x.shape)
+    dw = x_res.T.dot(dout)
+    db = dout.T.dot(np.ones((n,1))).reshape(b.shape)
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -82,7 +93,8 @@ def relu_forward(x):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out = np.maximum(0, x)
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -108,7 +120,12 @@ def relu_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    dx = np.copy(x)
+    dx[x<=0] = 0
+    dx[x>0] = 1
+    
+    # multiply local gradient dx by upstream gradient to get the gradient of the loss with respect to x
+    dx = dx*dout
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -137,7 +154,15 @@ def softmax_loss(x, y):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    n = x.shape[0]
+    # correct for numerical stability
+    probs = np.exp(x - np.max(x, axis=1, keepdims=True))
+    probs /= np.sum(probs, axis=1, keepdims=True)
+    loss = -np.sum(np.log(probs[np.arange(n), y]))/n
+    
+    dx = probs.copy()
+    dx[np.arange(n), y] -= 1
+    dx /= n
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################

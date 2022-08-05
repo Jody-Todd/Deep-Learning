@@ -78,16 +78,22 @@ class FullyConnectedNet(object):
         for i in range(self.num_layers):
             current_layer = i+1
             
-            # account for varying input/layer sizes
-            if i == 0:
-                input_dim = input_dim
+            # i == 0
+            if current_layer == 1:
+                current_layer_dim = input_dim
+                next_layer_dim = hidden_dims[i]
+            # i == 1: ...
             else:
-                input_dim = hidden_dims[i-1]
+                current_layer_dim = hidden_dims[i-1]
+                next_layer_dim = hidden_dims[i]
             
             # weights
-            self.params[f'W{current_layer}'] = np.random.randn(input_dim, hidden_dims[i]) * weight_scale # DxH = num_dim in previous layer x num_dim in current layer
+            self.params[f'W{current_layer}'] = np.random.randn(current_layer_dim, hidden_dims[i]) * weight_scale # DxH = num_dim in current layer x num_dim in next layer
             # biases
             self.params[f'b{current_layer}'] = np.zeros(hidden_dims[i])
+            
+        print(self.params.keys())
+        print(len(hidden_dims))
             
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -160,8 +166,36 @@ class FullyConnectedNet(object):
         # layer, etc.                                                              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        
+        # no need to reshape input since affine_forward expects the input shape to be (N, d1, d2, d3, ...)
+        #n = X.shape[0]
+        #input = X.reshape(n, np.prod(X.shape[1:]))
+        input = X
+ 
+        
+        # want to keep track of cache for each layer to use in backward pass
+        self.cache = {}
+        
+        if mode == "train":
+            # compute array of scores of size NxC
+            for i in range(self.num_layers):
+                current_layer = i+1
+                
+                # at final layer, it should just be affine before we add softmax
+                if i == self.num_layers - 1:
+                    out, cache = affine_forward(input, self.params[f'W{current_layer}'], self.params[f'b{current_layer}'])
+                # other layers are affine_relu
+                else:    
+                    out, cache = affine_relu_forward(input, self.params[f'W{current_layer}'], self.params[f'b{current_layer}'])
+                
+                self.cache[f'cache_{current_layer}'] = cache
+                
+            
+                input = out
+                
+            scores = out
+            print("yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy")
+            print(self.cache['cache2'])  
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -188,7 +222,24 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, dout = softmax_loss(scores,y)
+        
+
+        # step backwards through each layer
+        for i in range(self.num_layers - 1, 0, -1):
+            current_layer = i
+            
+            # for the first backward pass, we only do affine
+            if i == self.num_layers:
+                dx, grads[f'W{current_layer}'], grads[f'b{current_layer}'] = affine_backward(dout, self.cache[f'cache{current_layer}'])
+            # for other backward passes we do affine_relu
+            else:
+                dx, grads[f'W{current_layer}'], grads[f'b{current_layer}'] = affine_backward(dout, self.cache[f'cache{current_layer}'])
+                
+            # dx should be fed to the previous layer as the upstream gradient
+            dx = dout
+            
+        print(self.cache.keys())      
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
