@@ -246,8 +246,19 @@ class FullyConnectedNet(object):
                 
             # dx should be fed to the previous layer as the upstream gradient
             dout = dx
-              
+             
+             
+        # L2 regularization
+        sq_weights = 0.0
+        for i in range(self.num_layers):
+            sq_weights += np.sum(self.params['W%d' % (i+1)]**2)
+            
+        loss += 0.5*self.reg*sq_weights
 
+        for key in grads.keys():
+            grads[key] += self.reg*self.params[key]
+
+        
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
