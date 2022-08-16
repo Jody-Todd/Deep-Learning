@@ -183,26 +183,24 @@ class FullyConnectedNet(object):
         # want to keep track of cache for each layer to use in backward pass
         self.cache = {}
         
-        if mode == "train":
-            # compute array of scores of size NxC
-            for i in range(self.num_layers):
-                current_layer = i+1
-                
-                # at final layer, it should just be affine before we add softmax
-                if i == self.num_layers - 1:
-                    out, cache = affine_forward(input, self.params[f'W{current_layer}'], self.params[f'b{current_layer}'])
-                # other layers are affine_relu
-                else:    
-                    out, cache = affine_relu_forward(input, self.params[f'W{current_layer}'], self.params[f'b{current_layer}'])
-                
-                self.cache[f'cache{current_layer}'] = cache
-                
+ 
+        # compute array of scores of size NxC during forward pass for both training and testing mode
+        for i in range(self.num_layers):
+            current_layer = i+1
             
-                input = out
+            # at final layer, it should just be affine before we add softmax
+            if i == self.num_layers - 1:
+                scores, cache = affine_forward(input, self.params[f'W{current_layer}'], self.params[f'b{current_layer}'])
+            # other layers are affine_relu
+            else:    
+                out, cache = affine_relu_forward(input, self.params[f'W{current_layer}'], self.params[f'b{current_layer}'])
+            
+            self.cache[f'cache{current_layer}'] = cache
+            
+            input = out
                 
-            scores = out
-     
-           
+   
+        
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
